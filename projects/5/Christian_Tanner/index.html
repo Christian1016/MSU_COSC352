@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>WASM Hello World</title>
+</head>
+<body>
+  <h1>Interactive Hello with WebAssembly</h1>
+  <form id="greeting-form">
+    <label>Name: <input type="text" id="name" required></label><br>
+    <label>Age: <input type="number" id="age" required></label><br>
+    <label>Repeat Count: <input type="number" id="repeat" min="1" required></label><br>
+    <button type="submit">Submit</button>
+  </form>
+  <pre id="output"></pre>
+
+  <script src="hello.js"></script>
+  <script>
+    const onRuntimeInitialized = () => {
+      const generateGreeting = Module.cwrap("generate_greeting", "number", ["string", "number", "number"]);
+      const freeBuffer = Module.cwrap("free_buffer", null, ["number"]);
+
+      document.getElementById("greeting-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const name = document.getElementById("name").value;
+        const age = parseInt(document.getElementById("age").value, 10);
+        const repeat = parseInt(document.getElementById("repeat").value, 10);
+
+        const ptr = generateGreeting(name, age, repeat);
+        const result = Module.UTF8ToString(ptr);
+        document.getElementById("output").textContent = result;
+        freeBuffer(ptr);
+      });
+    };
+
+    Module.onRuntimeInitialized = onRuntimeInitialized;
+  </script>
+</body>
+</html>
